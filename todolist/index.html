@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Advanced To-Do List</title>
+  <style>
+    :root {
+      --bg: #121212;
+      --text: #f0f0f0;
+      --card: #1e1e1e;
+      --input-bg: #2a2a2a;
+      --highlight: #00ffcc;
+      --primary: #00cc88;
+    }
+
+    body.light {
+      --bg: #f2f2f2;
+      --text: #222;
+      --card: #fff;
+      --input-bg: #e0e0e0;
+      --highlight: #007777;
+      --primary: #007bff;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 40px;
+      transition: all 0.3s ease;
+    }
+
+    .clock {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+    }
+
+    .todo-container {
+      background: var(--card);
+      max-width: 500px;
+      margin: 100px auto 0 auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--highlight);
+    }
+
+    .greeting {
+      text-align: center;
+      font-size: 20px;
+      color: var(--text);
+      margin: 20px auto 10px auto;
+      display: block;
+      width: 100%;
+      transform: translateX(15px);
+    }
+
+    .inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input, select {
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: var(--input-bg);
+      color: var(--text);
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    button {
+      padding: 10px 12px;
+      border: none;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      background: var(--input-bg);
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    li.completed {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .task-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .delete, .edit {
+      background-color: #ff4444;
+      color: white;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+    }
+
+    .edit {
+      background-color: #ffc107;
+      color: black;
+    }
+
+    .delete:hover {
+      background-color: #cc3333;
+    }
+
+    .edit:hover {
+      background-color: #e0a800;
+    }
+
+    .filter {
+      margin-top: 10px;
+    }
+    
+  
+
+  .filter {
+    margin-top: 10px;
+  }
+
+  
+  @media (max-width: 600px) {
+    .todo-container {
+      width: 90%;
+      padding: 15px;
+    }
+
+    .inputs, .buttons {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+  .chatgpt-box {
+  position: absolute;
+  top: 60px;
+  right: 30px;
+  background: var(--card);
+  border-radius: 8px;
+  padding: 15px;
+  width: 250px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  font-size: 14px;
+}
+
+.chatgpt-box input {
+  width: 100%;
+  padding: 8px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  border: none;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.chat-output {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+</style>
+
+  
+</head>
+<body>
+
+<button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+<div class="clock" id="clock"></div>
+<div class="chatgpt-box" id="chatBox">
+  <h3 style="margin-bottom: 5px;">🤖 Chat Assistant</h3>
+  <div id="chatOutput" class="chat-output"></div>
+  <input type="text" id="chatInput" placeholder="Ask something..." onkeydown="handleChat(event)">
+</div>
+
+
+<div class="todo-container">
+  <div class="greeting" id="greeting"></div>
+  <h2>To-Do List</h2>
+
+  <div class="inputs">
+    <input type="text" id="taskInput" placeholder="Task description">
+    <input type="datetime-local" id="dueInput">
+    <div class="buttons">
+      <button onclick="addTask()">Add Task</button>
+      <select id="filter" class="filter" onchange="renderTasks()">
+        <option value="all">All</option>
+        <option value="active">In Progress</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
+  </div>
+
+  <ul id="taskList"></ul>
+</div>
+
+<!-- Pomodoro Timer -->
+<hr>
+<h2>Pomodoro Timer</h2>
+<div style="text-align:center; margin-top: 10px;">
+  <h1 id="timer">25:00</h1>
+  <p id="sessionType">Work Session</p>
+  <button onclick="startPomodoro()">Start</button>
+  <button onclick="pausePomodoro()">Pause</button>
+  <button onclick="resetPomodoro()">Reset</button>
+</div>
+
+<!-- 🎵 Background Music & Notification Sound -->
+<audio id="bgMusic" loop>
+  <source src="soft-piano-music-368174.mp3" type="audio/mpeg">
+</audio>
+<audio id="bellSound" src="mixkit-bell-notification-933.mp3"></audio>
+
+<!-- 🎚️ Toggle Music Button -->
+<div style="text-align:center; margin-top: 20px;">
+  <button onclick="toggleMusic()" id="musicToggle">🎵 Enable Music</button>
+</div>
+<!-- 💬 Redirect to ChatGPT -->
+<div style="text-align: center; margin-top: 20px;">
+  <button onclick="redirectToChatGPT()" style="padding: 10px 15px; border-radius: 8px; background-color: var(--primary); color: white; border: none; cursor: pointer;">
+    💬 Ask ChatGPT
+  </button>
+</div>
+
+<!-- Scripts -->
+<script>
+  // --- STATE MANAGEMENT ---
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+  // --- THEME ---
+  function loadTheme() {
+    const theme = localStorage.getItem("theme") || "dark";
+    document.body.classList.toggle("light", theme === "light");
+  }
+
+  function toggleTheme() {
+    const isLight = document.body.classList.toggle("light");
+    localStorage.setItem("theme", isLight ? "light" : "dark");
+  }
+
+  // --- CLOCK & GREETING ---
+  function updateClock() {
+    const now = new Date();
+    document.getElementById("clock").textContent = now.toLocaleTimeString();
+  }
+
+  function setGreeting() {
+    const hour = new Date().getHours();
+    let msg = "Hello!";
+    if (hour < 12) msg = "Good morning! ☀️";
+    else if (hour < 18) msg = "Good afternoon! 🌤️";
+    else msg = "Good evening! 🌙";
+    document.getElementById("greeting").textContent = msg;
+  }
+
+  // --- TASK MANAGEMENT ---
+  function addTask() {
+    const taskText = document.getElementById("taskInput").value.trim();
+    const dueDate = document.getElementById("dueInput").value;
+    if (taskText === "") return;
+    tasks.push({ id: Date.now(), text: taskText, completed: false, due: dueDate });
+    saveTasks();
+    renderTasks();
+    document.getElementById("taskInput").value = "";
+    document.getElementById("dueInput").value = "";
+  }
+  
+  function findTaskIndexById(taskId) {
+    return tasks.findIndex(task => task.id === taskId);
+  }
+
+  function editTask(taskId) {
+    const index = findTaskIndexById(taskId);
+    if (index === -1) return; 
+
+    const newText = prompt("Edit your task:", tasks[index].text);
+    if (newText !== null && newText.trim() !== "") {
+      tasks[index].text = newText.trim();
+      saveTasks();
+      renderTasks();
+    }
+  }
+
+  function toggleTask(taskId) {
+    const index = findTaskIndexById(taskId);
+    if (index === -1) return;
+    
+    tasks[index].completed = !tasks[index].completed;
+    saveTasks();
+    renderTasks();
+  }
+
+  function deleteTask(taskId) {
+    const index = findTaskIndexById(taskId);
+    if (index === -1) return;
+
+    tasks.splice(index, 1);
+    saveTasks();
+    renderTasks();
+  }
+
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function renderTasks() {
+    const list = document.getElementById("taskList");
+    list.innerHTML = "";
+    const filter = document.getElementById("filter").value;
+    
+    const filteredTasks = tasks.filter(task => {
+        if (filter === "completed") return task.completed;
+        if (filter === "active") return !task.completed;
+        return true;
+    });
+
+    filteredTasks.forEach(task => {
+      const li = document.createElement("li");
+      if (task.completed) li.classList.add("completed");
+      li.dataset.taskId = task.id;
+
+      const header = document.createElement("div");
+      header.className = "task-header";
+      header.innerHTML = `
+        <span>${task.text}</span>
+        <div class="task-actions">
+          <button class="edit" onclick="editTask(${task.id})">Edit</button>
+          <button class="delete" onclick="deleteTask(${task.id})">Delete</button>
+        </div>`;
+      li.appendChild(header);
+
+      if (task.due) {
+        const due = document.createElement("small");
+        due.style.color = "#aaa";
+        due.textContent = "Due: " + new Date(task.due).toLocaleString();
+        li.appendChild(due);
+      }
+
+      li.addEventListener("click", (e) => {
+        if (e.target.tagName.toLowerCase() !== 'button') {
+          toggleTask(task.id);
+        }
+      });
+      list.appendChild(li);
+    });
+  }
+
+  // --- NOTIFICATIONS ---
+  function checkDueTasks() {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") Notification.requestPermission();
+    if (Notification.permission !== "granted") return;
+
+    const now = new Date();
+    tasks.forEach(task => {
+      if (!task.completed && task.due) {
+        const due = new Date(task.due);
+        const diffMin = (due - now) / 60000;
+        if (diffMin <= 1 && diffMin >= 0 && !task.notified) {
+          new Notification("🔔 Task due soon!", { body: task.text + " is due at " + due.toLocaleTimeString() });
+          task.notified = true;
+        }
+        if (diffMin < 0 && !task.overdueNotified) {
+          new Notification("⚠️ Overdue Task!", { body: task.text + " was due at " + due.toLocaleTimeString() });
+          task.overdueNotified = true;
+        }
+      }
+    });
+    saveTasks();
+  }
+
+  // --- POMODORO ---
+  let pomodoroInterval, isPaused = true, isWork = true, cycles = 0, timeLeft = 25 * 60;
+
+  function updatePomodoroDisplay() {
+    const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const seconds = String(timeLeft % 60).padStart(2, '0');
+    document.getElementById("timer").textContent = `${minutes}:${seconds}`;
+    document.getElementById("sessionType").textContent = isWork ? "Work Session" : (cycles % 4 === 0 ? "Long Break" : "Short Break");
+  }
+
+  function startPomodoro() {
+    if (!isPaused) return;
+    isPaused = false;
+    pomodoroInterval = setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        updatePomodoroDisplay();
+      } else {
+        notifyPomodoroEnd();
+        if (isWork) {
+          cycles++;
+          isWork = false;
+          timeLeft = cycles % 4 === 0 ? 15 * 60 : 5 * 60;
+        } else {
+          isWork = true;
+          timeLeft = 25 * 60;
+        }
+        updatePomodoroDisplay();
+      }
+    }, 1000);
+  }
+
+  function pausePomodoro() {
+    isPaused = true;
+    clearInterval(pomodoroInterval);
+  }
+
+  function resetPomodoro() {
+    pausePomodoro();
+    isWork = true;
+    cycles = 0;
+    timeLeft = 25 * 60;
+    updatePomodoroDisplay();
+  }
+
+  function notifyPomodoroEnd() {
+    document.getElementById("bellSound")?.play();
+    if (Notification.permission === "granted") {
+      const msg = isWork ? "Time for a break! ☕" : "Back to work! 💼";
+      new Notification("⏰ Pomodoro Complete", { body: msg });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  }
+  
+  // --- BACKGROUND MUSIC (FIXED AND SIMPLIFIED) ---
+  const music = document.getElementById("bgMusic");
+  const toggleBtn = document.getElementById("musicToggle");
+
+  function toggleMusic() {
+    if (music.paused) {
+      const playPromise = music.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          // Playback started successfully
+          toggleBtn.textContent = "🔇 Disable Music";
+          localStorage.setItem("music", "on");
+        }).catch(error => {
+          // The AbortError is harmless and can be ignored.
+          // Only show an alert for other, more serious errors.
+          if (error.name !== 'AbortError') {
+            console.error("Audio play error:", error);
+            alert("Audio could not be played. Check the console for details.");
+            toggleBtn.textContent = "🎵 Enable Music";
+            localStorage.setItem("music", "off");
+          }
+        });
+      }
+    } else {
+      music.pause();
+      toggleBtn.textContent = "🎵 Enable Music";
+      localStorage.setItem("music", "off");
+    }
+  }
+
+  // --- INITIALIZATION ---
+  function init() {
+    loadTheme();
+    updateClock();
+    setInterval(updateClock, 1000);
+    setGreeting();
+    renderTasks();
+    checkDueTasks();
+    setInterval(checkDueTasks, 60000);
+    updatePomodoroDisplay();
+  }
+
+  // Run all initialization functions when the document is ready
+  document.addEventListener('DOMContentLoaded', init);
+  function redirectToChatGPT() {
+  window.open("https://chat.openai.com/", "_blank");
+}
+async function handleChat(e) {
+  if (e.key === "Enter") {
+    const input = document.getElementById("chatInput");
+    const output = document.getElementById("chatOutput");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    output.innerHTML += `<div><strong>You:</strong> ${msg}</div>`;
+    output.innerHTML += `<div><strong>Bot:</strong> <em>Typing...</em></div>`;
+    input.value = "";
+
+    const res = await fetch("https://DefenselessIdenticalMainframe.garimellanamish.repl.co/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    });
+
+    const data = await res.json();
+    output.lastChild.innerHTML = `<strong>Bot:</strong> ${data.reply}`;
+    output.scrollTop = output.scrollHeight;
+  }
+}
+
+
+
+
+</script>
+
+</body>
+</html>
