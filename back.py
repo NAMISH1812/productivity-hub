@@ -19,8 +19,9 @@ def chat():
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": user_msg}]
     )
-    reply = response.choices[0].message.content
+    reply = response.choices[0].message["content"]
     return jsonify({"reply": reply})
+
 
 
 
